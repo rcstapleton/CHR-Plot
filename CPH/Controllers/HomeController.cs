@@ -13,7 +13,6 @@
 namespace CPH.Controllers
 {
     using CPH.Models;
-    using CPH.Models.ViewModels;
     using Microsoft.AspNetCore.Hosting;
     using Microsoft.AspNetCore.Mvc;
     using Microsoft.Extensions.Logging;
