@@ -23,28 +23,5 @@ namespace CPH.BusinessLogic.Interfaces
     {
         string UploadsFolder { get; }
         string OriginalsFolder { get; }
-        Task CopyOriginalCsvToOriginalDirAsync(IFormFile file);
-        Task CopyAlteredCsvToUploadsDirAsync(IFormFile file);
-
-
-        /// <summary>
-        /// The CheckIfYearExists.
-        /// </summary>
-        /// <param name="fileName">The fileName<see cref="string"/>.</param>
-        /// <returns>The <see cref="bool"/>.</returns>
-        bool CheckIfYearExists(string fileName);
-
-        /// <summary>
-        /// The GetFileHash.
-        /// </summary>
-        /// <param name="file">The file<see cref="IFormFile"/>.</param>
-        /// <returns>The <see cref="int"/>.</returns>
-        int GetFileHashCode(IFormFile file);
-
-        /// <summary>
-        /// The GetCsvHashCodes.
-        /// </summary>
-        /// <returns>The <see cref="List{int}"/>.</returns>
-        List<int> GetCsvHashCodes();
     }
 }
