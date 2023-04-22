@@ -60,6 +60,11 @@ namespace CPH.Controllers
             return View();
         }
 
+        public IActionResult About()
+        {
+            return View();
+        }
+
         /// <summary>
         /// The Error.
         /// </summary>
