@@ -160,7 +160,9 @@ const ChartAttributes = new Vue({
 			if (event.target.files[0] === undefined) {
 				return;
 			}
-			this.fileReader.readAsBinaryString(event.target.files[0]);	
+			this.fileReader.readAsBinaryString(event.target.files[0]);
+			// Resets the element so repeated loading attempts will process
+			document.getElementById("readFile").value = [];
 		},
 
 		/**
@@ -432,7 +434,14 @@ const ChartAttributes = new Vue({
 			await d3.csv(`../uploads/${year.target.value}.csv`)
 				.then((data) => {
 
+
+					// Removes the final column that is empty
+					data.columns.pop()
+
+					// Adds the data value to the global
 					this.fullRawData = data;
+
+					// Creates a county object
 					let counties = this.getCountyList(data);
 
 					// Add to the html list.
