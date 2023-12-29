@@ -3,8 +3,8 @@
 }
 
 <div id="Chart">
-    <!--/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Chart and Aggregate Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-->
-    <div class="row" v-show="DisplayAggregatePane" id="divAggregate" v-cloak>
+    <!--/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Chart and Legend Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-->
+    <div class="row" v-show="displayLegend" id="divLegend" v-cloak>
         <!--Main Chart-->
         <div class="float-container">
             <div class="float-child-chart">
@@ -18,25 +18,11 @@
                     <li v-bind:style="{ color: dotColorArray[index]}">{{listItem}}</li>
                 </ul>
             </div>
-            <!--Full aggregate-->
-            <div class="float-child-aggregate-left">
-                <h5>All U.S</h5>
-                <p id="AggregateAreaFull"><pre>{{resultAggregateColumn}}</pre></p>
-            </div>
-            <!--Selected aggregate-->
-            <div class="float-child-aggregate-right">
-                <h5>Selected Regions</h5>
-                <p id="AggregateAreaSelected"><pre>{{resultAggregateSelected}}</pre></p>
-            </div>
         </div>
     </div>
 
     <!--/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Control Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-->
     <div>
-        <!--Clear Button-->
-        <div class="divBtnClear" v-show="DisplayAggregatePane" v-cloak>
-            <button @@click="clearButton()" class="btnClear" v-show="DisplayAggregatePane">Clear Selection</button>
-        </div>
         @* The files are named the year that they represent. *@
         <div class="divYear" v-cloak>
             <!--Select year dropdown-->
@@ -53,25 +39,19 @@
             <!--Select attribute filter dropdown-->
             <label class="labelAttributeFilter" for="attributeFilter" v-show="displayFilter">Attribute Filter</label>
             <select name="attributeFilter" id="attributeFilter" v-show="displayFilter" v-model="filterSelect">
-                <option disabled value="">Please select one</option>
                 <option v-for="(filterItem, index) in filterAttributeOptions" :key="filterItem" :value="filterItem">
                     {{filterItem}}
                 </option>
             </select>
         </div>
-        <!--county state switch-->
-        <span class="countryStateSwtich" v-show="DisplayAggregatePane" v-cloak>
-            <label for="counties">Counties</label>
-            <label class="switch">
-                <input type="checkbox" id="checkbox" v-on:click="countyStateToggle" />
-                <span class="slider round"></span>
-            </label>
-            <label for="states">States</label>
-        </span>
+        <!--Clear Button-->
+        <div class="divBtnClear" v-show="displayLegend" v-cloak>
+            <button @@click="clearButton()" class="btnClear" v-show="displayLegend">Clear Selection</button>
+        </div>
         <!--Save/Load-->
         <div class="divRegionSaveLoad" v-cloak>
-            <label class="labelRegionSaveLoad" for="regionSaveLoad" v-show="DisplayAggregatePane">Regions</label>
-            <select v-model="regionSaveLoadSelect" v-show="DisplayAggregatePane" class="regionSaveLoad">
+            <label class="labelRegionSaveLoad" for="regionSaveLoad" v-show="displayLegend">Save/Load</label>
+            <select v-model="regionSaveLoadSelect" v-show="displayLegend" class="regionSaveLoad">
                 <option disabled value="">Options</option>
                 <option value="SAVE">Save</option>
                 <option value="LOAD">Load</option>
@@ -89,7 +69,7 @@
             </ul>
         </div>
         <!--Select county or state list-->
-        <div class="col-4" v-show="DisplayAggregatePane" v-cloak>
+        <div class="col-4" v-show="displayLegend" v-cloak>
             <label class="labelCounties" for="Counties">Locations</label>
             <ul @@click="readCountyCheckbox($event)" id="Counties" style="list-style: none; height: 300px" class="form-control overflow-auto"></ul>
         </div>

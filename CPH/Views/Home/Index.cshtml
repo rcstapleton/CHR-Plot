@@ -5,8 +5,35 @@
 <div> 
     <H1 style="text-align:center">Welcome to CHR-Plot.</H1>
     <br />
-    <p>To get started, please navigate to the CreateChart page by clicking the link above. 
-        Also, please visit the About page to learn about the people and contributions that made this site possible.</p>
+    <p>This website generates annotated percentile charts of health indicators for the United States and its territories.  Data for these charts has been compiled by the County Health Rankings (CHR) project <a href="https://uwphi.pophealth.wisc.edu">(https://uwphi.pophealth.wisc.edu)</a>, a service of the University of Wisconsin's Public Health Institute.  The CHR project maintains data on its website on various health indicators for each of the U.S.'s 3000+ counties and independent cities, dating to 2010.</p>
+    <p>This site's charts depict CHR indicators for a set of user-selected counties and states on curves generated from CHR data, relative to a user-specified indicator and year.  Charts show counties and states as colorized dots on the chart, while listing the actual percentiles in a sidebar.  As a convenience for generating charts, users can save groups of counties and states to their PC's download folders, to be recalled for use in subsequent plots.</p>
+    <hr />
+    <img src="~/Content/Images/chart_example.jpg" alt="Example chart image" id="img-rounded" />
+    <hr />
+    <p>To use the site, select a year from the dropdown on this page. Doing so causes the site to show three additional dropdowns:</p>
+    <ul>
+        <li>One that lists counties and states from which to choose.</li>
+        <li>A second that shows an alphabetically sorted list of CHR health indicators for the selected year.</li>
+        <li>A supporting dropdown for the second that controls whether this list of health indicators shows
+            <ul>
+                <li>all indicators, or</li>
+                <li>selected indicators, filtered by whether they represent raw values (default), ratios, numerators, or denominators</li>
+            </ul>
+        </li>
+    </ul>
+    <p>Once a year and an indicator are selected, the site generates a webpage that shows the requested percentile chart, along with the site's primary controls:</p>
+    <ul>
+        <li>the year control</li>
+        <li>the health indicator dropdown for the given year, with its associated health indicators filter</li>
+        <li>the state/county dropdown for the given year</li>
+        <li>additional control that allows for
+            <ul>
+                <li>saving the currently selected group of counties and states under a name of your choice, or</li>
+                <li>recalling a group of previously saved counties and states</li>
+            </ul>
+        </li>
+    </ul>
+    <p>The counties and states dropdown can be used to incrementally add regions to or remove regions from the current percentile chart.  Changing the year or the indicator, on the other hand, redraws the current chart, erasing all counties from the chart.</p>
 </div>
 
 
