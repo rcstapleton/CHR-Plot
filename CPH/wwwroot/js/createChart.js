@@ -152,7 +152,6 @@ const ChartAttributes = new Vue({
 						document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = true;
 						uploadIndex++;
 						if (this.selectedCounties[uploadIndex] === undefined) {
-							//TODO: Convert to while loop or create a better comment
 							break;
 						};
 					};
@@ -277,17 +276,10 @@ const ChartAttributes = new Vue({
 			// Sets the arrays to empty, thus removing the chart dots
 			this.selectedCounties = [];
 
-			// Gets the county div
-			let countiesDiv = document.getElementById("Counties");
-
-			// removes the counties from the UL
-			this.removeAllChildNodes(countiesDiv);
-
-			// Gets the county list
-			let counties = this.getCountyList(this.fullRawData);
-
-			// populates the county div, thus resetting the county/state list
-			this.addDataToUL(this.fullRawData, counties, countiesDiv);
+			// Clears all checkboxes in the Counties ul list
+			for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
+				document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = false;
+			};
 		},
 		/**
 		 * @param {any} arrayOfObjects
@@ -337,7 +329,6 @@ const ChartAttributes = new Vue({
 			await d3.csv(`../uploads/${year.target.value}.csv`)
 				.then((data) => {
 
-
 					// Removes the final column that is empty
 					data.columns.pop()
 
@@ -347,12 +338,8 @@ const ChartAttributes = new Vue({
 					// Adds the data value to the global
 					this.fullRawData = data;
 
-					// Creates a county object
-					let counties = this.getCountyList(data);
-
 					// Add to the html list.
 					this.addDataToUL(data, data.columns, healthAttrs, "radio"); // data.columns are the health attributes from the csv file.
-					this.addDataToUL(data, counties, countiesDiv);
 				})
 				.catch((error) => {
 					console.error("Getting selected year from the CSV directory failed.");
@@ -421,19 +408,45 @@ const ChartAttributes = new Vue({
 		 * Returns a list of counties
 		 */
 		getCountyList(data) {
+
+			//Sorts the array
+			data.sort((a, b) => {
+				// Place 'US' at the very top
+				if (a[3] === 'US') {
+					return -1;
+				} else if (b[3] === 'US') {
+					return 1;
+				} else {
+					// Place values in array sub 4 that are '000' at the top
+					if (a[4] === '000' && b[4] !== '000') {
+						return -1;
+					} else if (a[4] !== '000' && b[4] === '000') {
+						return 1;
+					} else {
+						// If sub 4 values are not '000', continue with regular sorting
+						const stateAbbreviationComparison = a[3].localeCompare(b[3]);
+						if (stateAbbreviationComparison !== 0) {
+							return stateAbbreviationComparison;
+						} else {
+							// If state abbreviations are the same, sort by state name
+							return a[2].localeCompare(b[2]);
+						}
+					}
+				}
+			});
+
+			console.log(data);
+
+			// Adds the county and state data to a list
 			let listOfCounties = [];
 			for (var i = 0; i < data.length; i++) {
-				if (`${data[i]["County FIPS Code"]}` === "000") {
-					var countyWithState = `${data[i]["Name"]}`;
+				if (data[i][4] === "000") {
+					var countyWithState = data[i][2];
 				} else {
-					var countyWithState = `${data[i]["Name"]}, ${data[i]["State Abbreviation"]}`;
+					var countyWithState = data[i][2] + ", " + data[i][3];
 				}
 				listOfCounties.push(countyWithState);
 			}
-
-
-
-
 			return listOfCounties;
 		},
 		/**
@@ -755,26 +768,33 @@ const ChartAttributes = new Vue({
 
 			this.dataHolder.sort((a, b) => a[0] - b[0]);
 
-
-			//TODO Finish up the 0 remove switch
 			// element[0] is the health attribute number/data-point. This also serves as an index into a parallel array of the dataHolder property.
-			//this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0]]));
+			this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0], element[1], element[2], element[4]]));
 
 
 
 
-
-			function healthAttributeConverter(element, index) {
-				if (element[0] !== 0) {
-					console.log(element[0])
-					return [(index / this.dataHolder.length * 100), element[0]];
+			// Checks if the attributes value is not 0. If true, adds that value to the presentCounties array.
+			let presentCounties = [];
+			let absentCounties = [];
+			for (let i = 0; i < this.healthAttributeData.length; i++) {
+				if (this.healthAttributeData[i][1] !== 0) {
+					presentCounties.push(this.healthAttributeData[i]);
+				}
+				else {
+					absentCounties.push(this.healthAttributeData[i]);
 				}
 			}
-			this.healthAttributeData = this.dataHolder.map(healthAttributeConverter, this);
+
+
+			// Creates a county object
+			let countiesResult = this.getCountyList(presentCounties);
 
 
 
-
+			// populates the county div
+			let countiesDiv = document.getElementById("Counties");
+			this.addDataToUL(this.fullRawData, countiesResult, countiesDiv);
 
 
 			this.plot = this.createPlot([
@@ -787,7 +807,8 @@ const ChartAttributes = new Vue({
 			this.chartArea.appendChild(this.plot);
 
 			// Resets the selected counties on the chart and within the list
-			this.resetCountiesStateList()
+			//TODO Make it so the dots on the chart do not reset when changing attribute.
+			//this.resetCountiesStateList()
 
 			// Displays the legend
 			this.displayLegendToggle();
@@ -805,7 +826,6 @@ const ChartAttributes = new Vue({
 
 			// Populates the legend
 			this.createLegendList(arrayOfObjects);
-
 
 			// create the plot marks: Dots and Text.
 			let plotMarksArray = this.createPlotMarksArray(arrayOfObjects);
