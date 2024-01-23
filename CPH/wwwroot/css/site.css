@@ -82,6 +82,42 @@ body {
     font-size: 14px;
     font-weight: bold;
 }
+/*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\CreateChart: Zero Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
+#divZeroList {
+    border-style: ridge ridge ridge ridge;
+    height: 330px;
+    overflow: hidden;
+    overflow-y: scroll;
+}
+
+#divLabelZero {
+    border-style: none none ridge none;
+    width: 150%;
+    margin-left: -22%;
+    height: 8.7%;
+}
+
+.labelZeroList {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    padding-bottom: 0%;
+    margin-bottom: 0%;
+}
+
+#zeroList {
+    font-weight: bold;
+    margin-left: -5%;
+    margin-bottom: -3%;
+    border: none;
+    list-style-type: none;
+    text-align: left;
+    font-size: 16px;
+    font-weight: bold;
+    overflow: hidden;
+}
 
 /*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\CreateChart: Control Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 .divYear {
@@ -98,7 +134,7 @@ body {
 
 .divAttributeFilter {
     display: inline-block;
-    padding-left: 8%;
+    padding-left: 10.5%;
 }
 
 .labelAttributeFilter, attributeFilter {
@@ -111,7 +147,7 @@ body {
 
 .divBtnClear {
     display: inline-block;
-    margin-left: 15.5%;
+    margin-left: 1.5%;
 }
 
 .btnClear {
@@ -125,7 +161,7 @@ body {
 
 .divRegionSaveLoad {
     display: inline-block;
-    padding-left: 28%;
+    padding-left: 3%;
 }
 
 .labelRegionSaveLoad, regionSaveLoad {
@@ -138,6 +174,18 @@ body {
 
 /*----------CreateChart: Switch Settings----------*/
 /* Switch positional controls */
+.showZeroSwtich {
+    display: inline-block;
+    padding-left: 1.5%;
+}
+.labelZeroSwitch {
+    display: flex;
+    flex-direction: column;
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+}
+
 .switch {
     position: relative;
     display: inline-block;
@@ -155,11 +203,12 @@ body {
 .slider {
     position: absolute;
     cursor: pointer;
+    width: 1010%;
     top: 0;
     left: 0;
     right: 0;
     bottom: 15%;
-    background-color: blue;
+    background-color: green;
     -webkit-transition: .4s;
     transition: .4s;
 }
@@ -179,7 +228,7 @@ body {
 
 /* Swtich clicked logic */
 input:checked + .slider {
-    background-color: green;
+    background-color: red;
 }
 
 /* Swtich focus effect */
@@ -238,17 +287,6 @@ input:checked + .slider:before {
 
 #SelectRow {
     margin-top: 1%;
-}
-
-.labelAnomalies {
-    display: flex;
-    flex-direction: column;
-    text-align: center;
-    font-size: 18px;
-    font-weight: bold;
-    padding-bottom: 1%;
-    margin-bottom: -1%;
-    border-style: ridge ridge none ridge;
 }
 /*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Vue.js Settings/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 [v-cloak] {

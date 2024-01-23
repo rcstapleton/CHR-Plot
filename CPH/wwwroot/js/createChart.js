@@ -18,6 +18,9 @@ const ChartAttributes = new Vue({
 	// healthAttributeData - Holds the data values and percentiles of the selected health attribute - i.e., 1.096147823363608, 0
 	// fullRawData - Holds the selected file's unprocessed data as individual rows within an array
 	// selectedCounties - An array that holds all user selected counties
+	// previousCounties - An array that holds all user selected counties from the previous in iteration
+	// presentCounties -  An array that holds all counties that have a health attribute with a value greater than 0
+	// absentCounties - An array that holds all counties that have a health attribute with a value less than 1
 	// marks - Holds the charts draw data
 	// plot - Holds the plot
 	//---------------------------------------
@@ -25,6 +28,7 @@ const ChartAttributes = new Vue({
 	// displayLegend - Boolean; enables/disables display of the list of selected items
 	// displayFilter - Boolean; enables/disables display of the list of elements for specifying type of health indicator to display
 	// displayHealthAttribute - Boolean; enables/disables display of the entire list of health indicators
+	// displayZeroList - Boolean; enables/disables display of the list of items with zero values
 	// tempHide - DEBUG hide element used to hide region, until finished
 	//---------------------------------------
 	//					<<[Aggregation variables]>>
@@ -37,6 +41,7 @@ const ChartAttributes = new Vue({
 	//---------------------------------------
 	//					<<[UI Elements]>>
 	// legendListItems - Holds selected counties string titles for display in the legend
+	// zeroListItems -   Holds counties string titles for counties with a health attribute value that is less than 1 for display in the zero value list
 	// dotColorArray - Holds an array of string color values that are linked in parallel with each selected county item
 	//---------------------------------------
 	//					<<[Save/Load Variables]>>
@@ -49,9 +54,11 @@ const ChartAttributes = new Vue({
 		countiesDiv: document.getElementById('Counties'),
 		chartArea: document.getElementById("ChartArea"),
 		legendListItems: [],
+		zeroListItems: [],
 		dotColorArray: [],
 		displayLegend: false,
 		displayFilter: false,
+		displayZeroList: false,
 		displayHealthAttribute: false,
 		filterAttributeOptions: ["Raw", "Numerator", "Denominator", "Ratio", "All"],
 		filterSelect: 'Raw',
@@ -62,6 +69,9 @@ const ChartAttributes = new Vue({
 		healthAttribute: null,
 		healthAttributeData: [],
 		selectedCounties: [],
+		previousCounties: [],
+		presentCounties: [],
+		absentCounties: [],
 		marks: [],
 		plot: undefined,
 		regionSaveLoadSelect: "",
@@ -69,6 +79,141 @@ const ChartAttributes = new Vue({
 		writeFileName: ''
 	},
 	methods: {
+
+		/** 
+		 * 
+		 */
+		updateCountyList() {
+			// Clears the arrays
+			this.presentCounties = []
+			this.absentCounties = []
+
+			// Checks if the attributes value is not 0. If true, adds that value to the presentCounties array, else adds to the absentCounties.
+			let healthAttributeDataList = []
+			for (let i = 0; i < this.healthAttributeData.length; i++) {
+				healthAttributeDataList.push(this.healthAttributeData[i]) 
+				if (this.healthAttributeData[i][1] !== 0) {
+					this.presentCounties.push(this.healthAttributeData[i]);
+				}
+				else {
+					this.absentCounties.push(this.healthAttributeData[i]);
+				}
+			}
+
+			// resets and get the county div
+			this.removeAllChildNodes(document.getElementById("Counties"))
+			let countiesDiv = document.getElementById("Counties");
+
+			//Checks if zero values are requested and runs the desired logic
+			if (this.displayZeroList) {
+				let countiesNoZerosResult = this.getCountyList(this.presentCounties);
+				this.addDataToUL(this.fullRawData, countiesNoZerosResult, countiesDiv);
+				this.plot = this.createPlot([
+					Plot.ruleY([0]),
+					Plot.ruleX([0]),
+					Plot.line(this.presentCounties)
+				]);
+				// Populates the zero list
+				this.createZeroList();
+			}
+			else {
+				let countiesYesZerosResult = this.getCountyList(healthAttributeDataList);
+				this.addDataToUL(this.fullRawData, countiesYesZerosResult, countiesDiv);
+				this.plot = this.createPlot([
+					Plot.ruleY([0]),
+					Plot.ruleX([0]),
+					Plot.line(this.healthAttributeData)
+				]);
+			}
+
+			// Loads the previously selected counties/states
+			if (this.selectedCounties.length > 0) {
+				this.loadPreviosSelection()
+			}
+
+			// needed to re-fetch the area to draw the chart - #ChartArea.
+			this.chartArea = document.getElementById("ChartArea");
+
+			// Clears the old chart from the display
+			this.removeAllChildNodes(this.chartArea);
+
+			// Insert content into the #ChartArea Element.
+			this.chartArea.appendChild(this.plot);
+
+			// Saves the selectedCounties for the next iteration
+			this.previousCounties = this.selectedCounties;
+		},
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+		/**
+		* Returns a list of counies with null/zero values
+		*/
+		createZeroList() {
+			this.zeroListItems = [];
+			const columnPositionCounty = 2;
+			const columnPositionState = 3;
+			const columnPositionCountyFIPS = 4
+
+			//Builds a list of strings that contain the legend information
+			for (let i = 0; i < this.absentCounties.length; i++) {
+				if (this.absentCounties[i][columnPositionCountyFIPS] === "000") {
+					this.zeroListItems.push(this.absentCounties[i][columnPositionCounty]);
+				}
+				else {
+					this.zeroListItems.push(this.absentCounties[i][columnPositionCounty] + ", " + this.absentCounties[i][columnPositionState]);
+				}
+			}
+			return this.zeroListItems;
+		},
+		/**
+		 * Loads the previous selected items to the chart, clicks the previous selected check boxes, and removes counties not found in the present counties.
+		 */
+		loadPreviosSelection() {
+			// Clears previous chart dots and legend
+			this.resetCountiesStateList();
+			this.clearlegend();
+
+			// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties be named the same, and the limitations of the selectedCounties data capture method.
+			let countiesFound = []
+			for (let i = 0; i < this.presentCounties.length; i++) {
+				for (let x = 0; x < this.previousCounties.length; x++) {
+					if (this.presentCounties[i][2] === this.previousCounties[x].split(",")[0]) {
+						countiesFound.push(this.previousCounties[x])
+						continue
+					}
+				}
+			}
+
+			// Removes the duplicates
+			let uniqueCounties = [...new Set(countiesFound)];
+
+			// Adds the dots
+			this.selectedCounties = uniqueCounties;
+
+			// Marks the checkboxes based upon the the items found in uniqueCounties.
+			for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
+				for (let x = 0; x < uniqueCounties.length; x++) {
+					if (document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.id === uniqueCounties[x]) {
+						document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = true;
+						continue;
+					};
+				}
+			};
+		},
 
 		/**
 		 * Sorts the health attributes so that alphabetically characters are sorted, and non-alphabetic characters are placed at the end of the list
@@ -141,20 +286,34 @@ const ChartAttributes = new Vue({
 				this.resetCountiesStateList();
 				this.clearlegend();
 
-				// Sort the array and add the uploaded dots and legend
+				// Sort the array
 				rows.sort();
-				this.selectedCounties = rows;
+
+				// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties be named the same, and the limitations of the selectedCounties data capture method.
+				let countiesFound = []
+				for (let i = 0; i < this.presentCounties.length; i++) {
+					for (let x = 0; x < rows.length; x++) {
+						if (this.presentCounties[i][2] === rows[x].split(",")[0]) {
+							countiesFound.push(rows[x])
+							continue
+						}
+					}
+				}
+
+				// Removes the duplicates and add the uploaded dots and legend
+				let uniqueCounties = [...new Set(countiesFound)];
+				this.selectedCounties = uniqueCounties;
+
+				console.log(uniqueCounties)
 
 				// Marks the checkboxes based upon the the items found in the uploaded file.
-				let uploadIndex = 0;
 				for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
-					if (document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.id === this.selectedCounties[uploadIndex]) {
-						document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = true;
-						uploadIndex++;
-						if (this.selectedCounties[uploadIndex] === undefined) {
-							break;
+					for (let x = 0; x < uniqueCounties.length; x++) {
+						if (document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.id === uniqueCounties[x]) {
+							document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = true;
+							continue;
 						};
-					};
+					}
 				};
 				document.getElementById("readFile").value = [];
 			};
@@ -234,6 +393,15 @@ const ChartAttributes = new Vue({
 				};
 			};
 			return countyFIPS;
+		},
+		/**
+		* This function handles the hiding of the zero list
+		*/
+		displayZeroListToggle() {
+			this.displayZeroList = !this.displayZeroList;
+			// Updates the list of counties
+			this.updateCountyList();
+
 		},
 
 		/**
@@ -434,8 +602,6 @@ const ChartAttributes = new Vue({
 					}
 				}
 			});
-
-			console.log(data);
 
 			// Adds the county and state data to a list
 			let listOfCounties = [];
@@ -700,7 +866,7 @@ const ChartAttributes = new Vue({
 						label: "Percentile →",
 					},
 					y: {
-						label: `↑ ${this.capitalizer(this.healthAttribute)}`
+						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
 					},
 					marks: [
 						Plot.ruleY(plotMarksArray[0].data),
@@ -725,7 +891,7 @@ const ChartAttributes = new Vue({
 						label: "Percentile →",
 					},
 					y: {
-						label: `↑ ${this.capitalizer(this.healthAttribute)}`
+						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
 					},
 					marks: [
 						Plot.ruleY(plotMarksArray[0]),
@@ -743,14 +909,7 @@ const ChartAttributes = new Vue({
 		 * This Function watches for changes to the healthAttribute variable, and executes the following code
 		 * */
 		async healthAttribute() {
-
-			// needed to re-fetch the area to draw the chart - #ChartArea.
-			this.chartArea = document.getElementById("ChartArea");
-
-			// Clears the old chart from the display
-			this.removeAllChildNodes(this.chartArea);
-
-			// set the selected counties array to empty
+			// Checks if the healthAttribute is null and returns an error if true
 			if (this.healthAttribute === null) {
 				console.error("Health Attribute is null.");
 				return;
@@ -771,44 +930,8 @@ const ChartAttributes = new Vue({
 			// element[0] is the health attribute number/data-point. This also serves as an index into a parallel array of the dataHolder property.
 			this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0], element[1], element[2], element[4]]));
 
-
-
-
-			// Checks if the attributes value is not 0. If true, adds that value to the presentCounties array.
-			let presentCounties = [];
-			let absentCounties = [];
-			for (let i = 0; i < this.healthAttributeData.length; i++) {
-				if (this.healthAttributeData[i][1] !== 0) {
-					presentCounties.push(this.healthAttributeData[i]);
-				}
-				else {
-					absentCounties.push(this.healthAttributeData[i]);
-				}
-			}
-
-
-			// Creates a county object
-			let countiesResult = this.getCountyList(presentCounties);
-
-
-
-			// populates the county div
-			let countiesDiv = document.getElementById("Counties");
-			this.addDataToUL(this.fullRawData, countiesResult, countiesDiv);
-
-
-			this.plot = this.createPlot([
-				Plot.ruleY([0]),
-				Plot.ruleX([0]),
-				Plot.line(this.healthAttributeData),
-			]);
-
-			// Insert content into the #ChartArea Element.
-			this.chartArea.appendChild(this.plot);
-
-			// Resets the selected counties on the chart and within the list
-			//TODO Make it so the dots on the chart do not reset when changing attribute.
-			//this.resetCountiesStateList()
+			// Updates the list of counties
+			this.updateCountyList();
 
 			// Displays the legend
 			this.displayLegendToggle();
@@ -852,6 +975,8 @@ const ChartAttributes = new Vue({
 	    */
 		year() {
 			this.clearChartArea();
+			this.resetCountiesStateList();
+			this.clearlegend()
 		},
 
 		/** 

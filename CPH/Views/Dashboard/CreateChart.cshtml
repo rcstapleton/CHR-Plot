@@ -44,6 +44,14 @@
                 </option>
             </select>
         </div>
+        <!--Show Zero switch-->
+            <span class="showZeroSwtich" v-show="displayLegend" v-cloak>
+                <label class="labelZeroSwitch" for="zeroSwitch" v-show="displayLegend">Zeros On/Off</label>
+                <label class="switch">
+                <input type="checkbox" id="checkbox" v-on:click="displayZeroListToggle" />
+                    <span class="slider round"></span>
+                </label>
+            </span>
         <!--Clear Button-->
         <div class="divBtnClear" v-show="displayLegend" v-cloak>
             <button @@click="clearButton()" class="btnClear" v-show="displayLegend">Clear Selection</button>
@@ -73,19 +81,18 @@
             <label class="labelCounties" for="Counties">Locations</label>
             <ul @@click="readCountyCheckbox($event)" id="Counties" style="list-style: none; height: 300px" class="form-control overflow-auto"></ul>
         </div>
-        <!--Anomaly Output-->
-        <!--<div class="col-4" v-show="DisplayAggregatePane" v-cloak>
-        <label class="labelAnomalies" for="Anomalies">Anomalies</label>
-        <ul id="Anomalies" style="list-style: none; height: 300px" class="form-control overflow-auto">
-            <li>
-                Under Construction
-            </li>
-        </ul>
-    </div>-->
+        <!--Zero Values Output-->
+        <div class="col-4" id="divZeroList" v-show="displayZeroList" v-cloak>
+            <div id="divLabelZero">
+                <label class="labelZeroList" for="ZeroList">Zero Values</label>
+            </div>
+            <ul v-for="(listItem, index) in zeroListItems" id="zeroList" class="form-control overflow-auto">
+                <li>{{listItem}}</li>
+            </ul>
+        </div>
     </div>
     <!--<label for="checkbox">{{ regionSaveLoadSelect }}</label>-->
 </div>
-
 @section scripts{
     <script type="module" src="~/js/createChart.js"></script>
 }
