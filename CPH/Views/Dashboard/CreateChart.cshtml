@@ -2,7 +2,9 @@
     ViewData["Title"] = "Create Chart";
 }
 
+
 <div id="Chart">
+    <div class="loader"></div>
     <!--/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Chart and Legend Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\-->
     <div class="row" v-show="displayLegend" id="divLegend" v-cloak>
         <!--Main Chart-->
@@ -82,13 +84,13 @@
             <ul @@click="readCountyCheckbox($event)" id="Counties" style="list-style: none; height: 300px" class="form-control overflow-auto"></ul>
         </div>
         <!--Zero Values Output-->
-        <div class="col-4" id="divZeroList" v-show="displayZeroList" v-cloak>
-            <div id="divLabelZero">
-                <label class="labelZeroList" for="ZeroList">Zero Values</label>
-            </div>
-            <ul v-for="(listItem, index) in zeroListItems" id="zeroList" class="form-control overflow-auto">
+        <div class="col-4" id="divZeroListOuter" v-show="displayZeroList" v-cloak>   
+            <label class="labelZeroList" for="ZeroList">Zero Values</label>
+            <div class="divZeroListInner">
+            <ul v-for="(listItem, index) in zeroListItems" id="zeroList">
                 <li>{{listItem}}</li>
             </ul>
+            </div>
         </div>
     </div>
     <!--<label for="checkbox">{{ regionSaveLoadSelect }}</label>-->

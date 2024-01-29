@@ -78,10 +78,20 @@ const ChartAttributes = new Vue({
 		fileReader: new FileReader(),
 		writeFileName: ''
 	},
+	mounted: function () {
+		//will execute at pageload
+		this.$el.querySelector(".loader").style.display = 'none';
+	},
 	methods: {
-
+		/**
+		 * Sorts the presentCounties array
+		 */
+		sortPresentCounties() {
+			// Sorting the array based on the first element of each sub-array
+			this.presentCounties.sort((a, b) => a[0] - b[0]);
+		},
 		/** 
-		 * 
+		 * Updates the listed counties found within the HTML county list
 		 */
 		updateCountyList() {
 			// Clears the arrays
@@ -99,7 +109,6 @@ const ChartAttributes = new Vue({
 					this.absentCounties.push(this.healthAttributeData[i]);
 				}
 			}
-
 			// resets and get the county div
 			this.removeAllChildNodes(document.getElementById("Counties"))
 			let countiesDiv = document.getElementById("Counties");
@@ -143,22 +152,6 @@ const ChartAttributes = new Vue({
 			// Saves the selectedCounties for the next iteration
 			this.previousCounties = this.selectedCounties;
 		},
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 		/**
 		* Returns a list of counies with null/zero values
 		*/
@@ -187,13 +180,25 @@ const ChartAttributes = new Vue({
 			this.resetCountiesStateList();
 			this.clearlegend();
 
-			// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties be named the same, and the limitations of the selectedCounties data capture method.
+			// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties being named the same, and the limitations of the selectedCounties data capture method.
 			let countiesFound = []
-			for (let i = 0; i < this.presentCounties.length; i++) {
-				for (let x = 0; x < this.previousCounties.length; x++) {
-					if (this.presentCounties[i][2] === this.previousCounties[x].split(",")[0]) {
-						countiesFound.push(this.previousCounties[x])
-						continue
+			if (this.displayZeroList) {
+				for (let i = 0; i < this.presentCounties.length; i++) {
+					for (let x = 0; x < this.previousCounties.length; x++) {
+						if (this.presentCounties[i][2] === this.previousCounties[x].split(",")[0]) {
+							countiesFound.push(this.previousCounties[x])
+							continue
+						}
+					}
+				}
+			}
+			else {
+				for (let i = 0; i < this.healthAttributeData.length; i++) {
+					for (let x = 0; x < this.previousCounties.length; x++) {
+						if (this.healthAttributeData[i][2] === this.previousCounties[x].split(",")[0]) {
+							countiesFound.push(this.previousCounties[x])
+							continue
+						}
 					}
 				}
 			}
@@ -282,39 +287,12 @@ const ChartAttributes = new Vue({
 					alert('Error: Unknown Year Status')
 				}
 
-				// Clears previous chart dots and legend
-				this.resetCountiesStateList();
-				this.clearlegend();
-
 				// Sort the array
 				rows.sort();
+				this.previousCounties = rows;
 
 				// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties be named the same, and the limitations of the selectedCounties data capture method.
-				let countiesFound = []
-				for (let i = 0; i < this.presentCounties.length; i++) {
-					for (let x = 0; x < rows.length; x++) {
-						if (this.presentCounties[i][2] === rows[x].split(",")[0]) {
-							countiesFound.push(rows[x])
-							continue
-						}
-					}
-				}
-
-				// Removes the duplicates and add the uploaded dots and legend
-				let uniqueCounties = [...new Set(countiesFound)];
-				this.selectedCounties = uniqueCounties;
-
-				console.log(uniqueCounties)
-
-				// Marks the checkboxes based upon the the items found in the uploaded file.
-				for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
-					for (let x = 0; x < uniqueCounties.length; x++) {
-						if (document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.id === uniqueCounties[x]) {
-							document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = true;
-							continue;
-						};
-					}
-				};
+				this.loadPreviosSelection();
 				document.getElementById("readFile").value = [];
 			};
 			if (event.target.files[0] === undefined) {
@@ -702,14 +680,20 @@ const ChartAttributes = new Vue({
 		 * @param {Array} arrayOfObjects
 		 */
 		createPlotMarksArray(arrayOfObjects) {
-			let marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.healthAttributeData)];
+			let marksArray = [];
+			if (this.displayZeroList) {
+				this.sortPresentCounties()
+				 marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.presentCounties)];
+			}
+			else {
+				 marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.healthAttributeData)];
+			}
 			for (let a = 0; a < arrayOfObjects.length; a++) {
 				// push plot dots to marks array
 				marksArray.push(this.createPlotDots(arrayOfObjects[a]));
 				// push plot text to marks array - TODO: See if this can be brought back as hover text
 				//marksArray.push(this.createPlotText(arrayOfObjects[a]));
 			}
-
 			return marksArray;
 		},
 		/**
@@ -850,55 +834,109 @@ const ChartAttributes = new Vue({
 						count = 0;
 					}
 				};
-
 				// Returns the plot to the calling function when a county is clicked
-				return Plot.plot({
-					margin: 60,
-					grid: true,
-					height: 900,
-					width: 1000,
-					style: {
-						fontSize: "18px",
-						marginLeft: "1.5%",
-					},
-					x: {
-						ticks: 10,
-						label: "Percentile →",
-					},
-					y: {
-						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-					},
-					marks: [
-						Plot.ruleY(plotMarksArray[0].data),
-						Plot.ruleX(plotMarksArray[1].data),
-						Plot.line(plotMarksArray[2].data, { strokeWidth: 2.5, stroke: "black"}),
-						Plot.dot(dotArray, {opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray})
-					]
-				});
+				if (this.displayZeroList) {
+					this.sortPresentCounties()
+					return Plot.plot({
+						margin: 60,
+						grid: true,
+						height: 900,
+						width: 1000,
+						style: {
+							fontSize: "18px",
+							marginLeft: "1.5%",
+						},
+						x: {
+							ticks: 10,
+							label: "Percentile →",
+						},
+						y: {
+							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+						},
+						marks: [
+							Plot.ruleY(this.presentCounties),
+							Plot.ruleX(this.presentCounties),
+							Plot.line(this.presentCounties, { strokeWidth: 2.5, stroke: "black" }),
+							Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
+						]
+					});
+				}
+				else {
+					return Plot.plot({
+						margin: 60,
+						grid: true,
+						height: 900,
+						width: 1000,
+						style: {
+							fontSize: "18px",
+							marginLeft: "1.5%",
+						},
+						x: {
+							ticks: 10,
+							label: "Percentile →",
+						},
+						y: {
+							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+						},
+						marks: [
+							Plot.ruleY(plotMarksArray[0].data),
+							Plot.ruleX(plotMarksArray[1].data),
+							Plot.line(plotMarksArray[2].data, { strokeWidth: 2.5, stroke: "black" }),
+							Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
+						]
+					});
+				};
 			} else {
 				// Returns the plot to the calling function when a health attribute is clicked
-				return Plot.plot({
-					margin: 60,
-					grid: true,
-					height: 900,
-					width: 1000,
-					style: {
-						fontSize: "18px",
-						marginLeft: "1.5%",
-					},
-					x: {
-						ticks: 10,
-						label: "Percentile →",
-					},
-					y: {
-						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-					},
-					marks: [
-						Plot.ruleY(plotMarksArray[0]),
-						Plot.ruleX(plotMarksArray[1]),
-						Plot.line(this.healthAttributeData, { strokeWidth: 2.5, stroke: "black" }),
-					]
-				});
+				if (this.displayZeroList) {
+					this.sortPresentCounties()
+					return Plot.plot({
+						margin: 60,
+						grid: true,
+						height: 900,
+						width: 1000,
+						style: {
+							fontSize: "18px",
+							marginLeft: "1.5%",
+						},
+						x: {
+							ticks: 10,
+							label: "Percentile →",
+						},
+						y: {
+							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+						},
+						marks: [
+							Plot.ruleY(this.presentCounties),
+							Plot.ruleX(this.presentCounties),
+							Plot.line(this.presentCounties, { strokeWidth: 2.5, stroke: "black" }),
+						]
+					});
+				}
+				else {
+					return Plot.plot({
+						margin: 60,
+						grid: true,
+						height: 900,
+						width: 1000,
+						style: {
+							fontSize: "18px",
+							marginLeft: "1.5%",
+						},
+						x: {
+							ticks: 10,
+							label: "Percentile →",
+						},
+						y: {
+							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+						},
+						marks: [
+							Plot.ruleY(plotMarksArray[0]),
+							Plot.ruleX(plotMarksArray[1]),
+							Plot.line(this.healthAttributeData, { strokeWidth: 2.5, stroke: "black" }),
+						]
+					});
+				}
 			}
 		}
 	},
@@ -942,6 +980,9 @@ const ChartAttributes = new Vue({
 		*/
 		selectedCounties() {
 
+			// Ensures that previousCounties is always up to date
+			this.previousCounties = this.selectedCounties
+
 			let parsedArray = this.parseSelectedCountyStateArray();
 
 			//create object with information to be plotted. 
@@ -964,7 +1005,6 @@ const ChartAttributes = new Vue({
 			let healthAttrs = document.getElementById("HealthAttrs");
 			this.removeAllChildNodes(healthAttrs);
 			this.addDataToUL(this.fullRawData, this.fullRawData.columns, healthAttrs, "radio");
-
 			this.resetCountiesStateList();
 			this.clearChartArea();
 			this.clearlegend();

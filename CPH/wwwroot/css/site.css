@@ -83,21 +83,8 @@ body {
     font-weight: bold;
 }
 /*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\CreateChart: Zero Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
-#divZeroList {
-    border-style: ridge ridge ridge ridge;
-    height: 330px;
-    overflow: hidden;
-    overflow-y: scroll;
-}
-
-#divLabelZero {
-    border-style: none none ridge none;
-    width: 150%;
-    margin-left: -22%;
-    height: 8.7%;
-}
-
 .labelZeroList {
+    border-style: ridge ridge none ridge;
     display: flex;
     flex-direction: column;
     text-align: center;
@@ -106,19 +93,22 @@ body {
     padding-bottom: 0%;
     margin-bottom: 0%;
 }
-
-#zeroList {
-    font-weight: bold;
-    margin-left: -5%;
-    margin-bottom: -3%;
-    border: none;
-    list-style-type: none;
-    text-align: left;
-    font-size: 16px;
-    font-weight: bold;
+.divZeroListInner {
+    border-style: ridge ridge ridge ridge;
+    height: 300px;
     overflow: hidden;
+    overflow-y: scroll;
 }
-
+#zeroList {
+    list-style-type: none;
+    border: none;
+}
+    #zeroList > * {
+        font-weight: bold;
+        margin-left: -10%;
+        margin-bottom: -3%;
+        color: #525252;
+    }
 /*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\CreateChart: Control Section/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 .divYear {
     display: inline-block;
@@ -291,4 +281,23 @@ input:checked + .slider:before {
 /*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Vue.js Settings/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
 [v-cloak] {
     display: none;
+}
+/*/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\Loading Spinner/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\*/
+.loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
 }
