@@ -19,8 +19,6 @@ const ChartAttributes = new Vue({
 	// fullRawData - Holds the selected file's unprocessed data as individual rows within an array
 	// selectedCounties - An array that holds all user selected counties
 	// previousCounties - An array that holds all user selected counties from the previous in iteration
-	// presentCounties -  An array that holds all counties that have a health attribute with a value greater than 0
-	// absentCounties - An array that holds all counties that have a health attribute with a value less than 1
 	// marks - Holds the charts draw data
 	// plot - Holds the plot
 	//---------------------------------------
@@ -65,13 +63,13 @@ const ChartAttributes = new Vue({
 		tempHide: false,
 		fullRawData: [],
 		dataHolder: null,
+		dataHolderNoZeros: [],
+		dataHolderAllZeros: [],
 		year: 0,
 		healthAttribute: null,
 		healthAttributeData: [],
 		selectedCounties: [],
 		previousCounties: [],
-		presentCounties: [],
-		absentCounties: [],
 		marks: [],
 		plot: undefined,
 		regionSaveLoadSelect: "",
@@ -83,57 +81,36 @@ const ChartAttributes = new Vue({
 		this.$el.querySelector(".loader").style.display = 'none';
 	},
 	methods: {
-		/**
-		 * Sorts the presentCounties array
-		 */
-		sortPresentCounties() {
-			// Sorting the array based on the first element of each sub-array
-			this.presentCounties.sort((a, b) => a[0] - b[0]);
-		},
 		/** 
 		 * Updates the listed counties found within the HTML county list
 		 */
 		updateCountyList() {
-			// Clears the arrays
-			this.presentCounties = []
-			this.absentCounties = []
-
-			// Checks if the attributes value is not 0. If true, adds that value to the presentCounties array, else adds to the absentCounties.
-			let healthAttributeDataList = []
-			for (let i = 0; i < this.healthAttributeData.length; i++) {
-				healthAttributeDataList.push(this.healthAttributeData[i]) 
-				if (this.healthAttributeData[i][1] !== 0) {
-					this.presentCounties.push(this.healthAttributeData[i]);
-				}
-				else {
-					this.absentCounties.push(this.healthAttributeData[i]);
-				}
+			// element[0] is the health attribute number/data-point. This also serves as an index into a parallel array of the dataHolder property.
+			if (this.displayZeroList) {
+				this.healthAttributeData = this.dataHolderNoZeros.map((element, index) => ([(index / this.dataHolderNoZeros.length * 100), element[0], element[1], element[2], element[4]]));
 			}
+			else {
+				this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0], element[1], element[2], element[4]]));
+			}
+
+			console.log(this.healthAttributeData)
+
 			// resets and get the county div
 			this.removeAllChildNodes(document.getElementById("Counties"))
 			let countiesDiv = document.getElementById("Counties");
 
-			//Checks if zero values are requested and runs the desired logic
+			//Checks if zero values are requested and populates the zero list.
 			if (this.displayZeroList) {
-				let countiesNoZerosResult = this.getCountyList(this.presentCounties);
-				this.addDataToUL(this.fullRawData, countiesNoZerosResult, countiesDiv);
-				this.plot = this.createPlot([
-					Plot.ruleY([0]),
-					Plot.ruleX([0]),
-					Plot.line(this.presentCounties)
-				]);
-				// Populates the zero list
 				this.createZeroList();
 			}
-			else {
-				let countiesYesZerosResult = this.getCountyList(healthAttributeDataList);
-				this.addDataToUL(this.fullRawData, countiesYesZerosResult, countiesDiv);
-				this.plot = this.createPlot([
-					Plot.ruleY([0]),
-					Plot.ruleX([0]),
-					Plot.line(this.healthAttributeData)
-				]);
-			}
+
+			// add the plot to the DOM
+			this.addDataToUL(this.fullRawData, this.getCountyList(this.healthAttributeData), countiesDiv);
+			this.plot = this.createPlot([
+				Plot.ruleY([0]),
+				Plot.ruleX([0]),
+				Plot.line(this.healthAttributeData)
+			]);
 
 			// Loads the previously selected counties/states
 			if (this.selectedCounties.length > 0) {
@@ -157,17 +134,17 @@ const ChartAttributes = new Vue({
 		*/
 		createZeroList() {
 			this.zeroListItems = [];
-			const columnPositionCounty = 2;
-			const columnPositionState = 3;
+			const columnPositionCounty = 1;
+			const columnPositionState = 2;
 			const columnPositionCountyFIPS = 4
 
-			//Builds a list of strings that contain the legend information
-			for (let i = 0; i < this.absentCounties.length; i++) {
-				if (this.absentCounties[i][columnPositionCountyFIPS] === "000") {
-					this.zeroListItems.push(this.absentCounties[i][columnPositionCounty]);
+			//Builds a list of strings all counties/states with 0 values
+			for (let i = 0; i < this.dataHolderAllZeros.length; i++) {
+				if (this.dataHolderAllZeros[i][columnPositionCountyFIPS] === "000") {
+					this.zeroListItems.push(this.dataHolderAllZeros[i][columnPositionCounty]);
 				}
 				else {
-					this.zeroListItems.push(this.absentCounties[i][columnPositionCounty] + ", " + this.absentCounties[i][columnPositionState]);
+					this.zeroListItems.push(this.dataHolderAllZeros[i][columnPositionCounty] + ", " + this.dataHolderAllZeros[i][columnPositionState]);
 				}
 			}
 			return this.zeroListItems;
@@ -180,29 +157,16 @@ const ChartAttributes = new Vue({
 			this.resetCountiesStateList();
 			this.clearlegend();
 
-			// Compares this.presentCounties and previousCounties. Populates a new array with matchs found. These matchas will include duplicates due to counties being named the same, and the limitations of the selectedCounties data capture method.
+			// Compares healthAttributeData and previousCounties. Populates a new array with matches found. These matches will include duplicates due to counties being named the same, and the limitations of the selectedCounties data capture method.
 			let countiesFound = []
-			if (this.displayZeroList) {
-				for (let i = 0; i < this.presentCounties.length; i++) {
-					for (let x = 0; x < this.previousCounties.length; x++) {
-						if (this.presentCounties[i][2] === this.previousCounties[x].split(",")[0]) {
-							countiesFound.push(this.previousCounties[x])
-							continue
-						}
+			for (let i = 0; i < this.healthAttributeData.length; i++) {
+				for (let x = 0; x < this.previousCounties.length; x++) {
+					if (this.healthAttributeData[i][2] === this.previousCounties[x].split(",")[0]) {
+						countiesFound.push(this.previousCounties[x])
+						continue
 					}
 				}
 			}
-			else {
-				for (let i = 0; i < this.healthAttributeData.length; i++) {
-					for (let x = 0; x < this.previousCounties.length; x++) {
-						if (this.healthAttributeData[i][2] === this.previousCounties[x].split(",")[0]) {
-							countiesFound.push(this.previousCounties[x])
-							continue
-						}
-					}
-				}
-			}
-
 			// Removes the duplicates
 			let uniqueCounties = [...new Set(countiesFound)];
 
@@ -379,9 +343,7 @@ const ChartAttributes = new Vue({
 			this.displayZeroList = !this.displayZeroList;
 			// Updates the list of counties
 			this.updateCountyList();
-
 		},
-
 		/**
 		* This function handles the hiding of the health attribute list
 		*/
@@ -550,13 +512,16 @@ const ChartAttributes = new Vue({
 			}
 		},
 		/**
-		 * @param {Array} data
+		 * @param {Array} dataIn
 		 * Returns a list of counties
 		 */
-		getCountyList(data) {
+		getCountyList(dataIn) {
+
+			//Copies the array, so the original is not modified in the following sort.
+			let countryListItems = dataIn.slice();
 
 			//Sorts the array
-			data.sort((a, b) => {
+			countryListItems.sort((a, b) => {
 				// Place 'US' at the very top
 				if (a[3] === 'US') {
 					return -1;
@@ -583,11 +548,11 @@ const ChartAttributes = new Vue({
 
 			// Adds the county and state data to a list
 			let listOfCounties = [];
-			for (var i = 0; i < data.length; i++) {
-				if (data[i][4] === "000") {
-					var countyWithState = data[i][2];
+			for (var i = 0; i < countryListItems.length; i++) {
+				if (countryListItems[i][4] === "000") {
+					var countyWithState = countryListItems[i][2];
 				} else {
-					var countyWithState = data[i][2] + ", " + data[i][3];
+					var countyWithState = countryListItems[i][2] + ", " + countryListItems[i][3];
 				}
 				listOfCounties.push(countyWithState);
 			}
@@ -680,14 +645,7 @@ const ChartAttributes = new Vue({
 		 * @param {Array} arrayOfObjects
 		 */
 		createPlotMarksArray(arrayOfObjects) {
-			let marksArray = [];
-			if (this.displayZeroList) {
-				this.sortPresentCounties()
-				 marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.presentCounties)];
-			}
-			else {
-				 marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.healthAttributeData)];
-			}
+			let marksArray = [Plot.ruleY([0]), Plot.ruleX([0]), Plot.line(this.healthAttributeData)];
 			for (let a = 0; a < arrayOfObjects.length; a++) {
 				// push plot dots to marks array
 				marksArray.push(this.createPlotDots(arrayOfObjects[a]));
@@ -741,12 +699,11 @@ const ChartAttributes = new Vue({
 		 * Returns the county state index
 		 */
 		getCountStateIndex(countyStateArray) {
-
 			if (countyStateArray.length === 2) {
-				let index = this.dataHolder.findIndex(x => x[1] == countyStateArray[0] && x[2] == countyStateArray[1]);
+				let index = this.healthAttributeData.findIndex(x => x[2] == countyStateArray[0] && x[3] == countyStateArray[1]);
 				return index;
 			} else if (countyStateArray.length === 1) {
-				let index = this.dataHolder.findIndex(x => x[1] == countyStateArray[0]);
+				let index = this.healthAttributeData.findIndex(x => x[2] == countyStateArray[0]);
 				return index;
 			} else {
 				console.log("There was an error with the county state array's length (Expected lengths are between 1 and 2)")
@@ -834,109 +791,56 @@ const ChartAttributes = new Vue({
 						count = 0;
 					}
 				};
+
 				// Returns the plot to the calling function when a county is clicked
-				if (this.displayZeroList) {
-					this.sortPresentCounties()
-					return Plot.plot({
-						margin: 60,
-						grid: true,
-						height: 900,
-						width: 1000,
-						style: {
-							fontSize: "18px",
-							marginLeft: "1.5%",
-						},
-						x: {
-							ticks: 10,
-							label: "Percentile →",
-						},
-						y: {
-							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-						},
-						marks: [
-							Plot.ruleY(this.presentCounties),
-							Plot.ruleX(this.presentCounties),
-							Plot.line(this.presentCounties, { strokeWidth: 2.5, stroke: "black" }),
-							Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
-						]
-					});
-				}
-				else {
-					return Plot.plot({
-						margin: 60,
-						grid: true,
-						height: 900,
-						width: 1000,
-						style: {
-							fontSize: "18px",
-							marginLeft: "1.5%",
-						},
-						x: {
-							ticks: 10,
-							label: "Percentile →",
-						},
-						y: {
-							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-						},
-						marks: [
-							Plot.ruleY(plotMarksArray[0].data),
-							Plot.ruleX(plotMarksArray[1].data),
-							Plot.line(plotMarksArray[2].data, { strokeWidth: 2.5, stroke: "black" }),
-							Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
-						]
-					});
-				};
+				return Plot.plot({
+					margin: 60,
+					grid: true,
+					height: 900,
+					width: 1000,
+					style: {
+						fontSize: "18px",
+						marginLeft: "1.5%",
+					},
+					x: {
+						ticks: 10,
+						label: "Percentile →",
+					},
+					y: {
+						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+					},
+					marks: [
+						Plot.ruleY(plotMarksArray[0].data),
+						Plot.ruleX(plotMarksArray[1].data),
+						Plot.line(plotMarksArray[2].data, { strokeWidth: 2.5, stroke: "black" }),
+						Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
+					]
+				});
 			} else {
 				// Returns the plot to the calling function when a health attribute is clicked
-				if (this.displayZeroList) {
-					this.sortPresentCounties()
-					return Plot.plot({
-						margin: 60,
-						grid: true,
-						height: 900,
-						width: 1000,
-						style: {
-							fontSize: "18px",
-							marginLeft: "1.5%",
-						},
-						x: {
-							ticks: 10,
-							label: "Percentile →",
-						},
-						y: {
-							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-						},
-						marks: [
-							Plot.ruleY(this.presentCounties),
-							Plot.ruleX(this.presentCounties),
-							Plot.line(this.presentCounties, { strokeWidth: 2.5, stroke: "black" }),
-						]
-					});
-				}
-				else {
-					return Plot.plot({
-						margin: 60,
-						grid: true,
-						height: 900,
-						width: 1000,
-						style: {
-							fontSize: "18px",
-							marginLeft: "1.5%",
-						},
-						x: {
-							ticks: 10,
-							label: "Percentile →",
-						},
-						y: {
-							label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
-						},
-						marks: [
-							Plot.ruleY(plotMarksArray[0]),
-							Plot.ruleX(plotMarksArray[1]),
-							Plot.line(this.healthAttributeData, { strokeWidth: 2.5, stroke: "black" }),
-						]
-					});
-				}
+				return Plot.plot({
+					margin: 60,
+					grid: true,
+					height: 900,
+					width: 1000,
+					style: {
+						fontSize: "18px",
+						marginLeft: "1.5%",
+					},
+					x: {
+						ticks: 10,
+						label: "Percentile →",
+					},
+					y: {
+						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
+					},
+					marks: [
+						Plot.ruleY(plotMarksArray[0]),
+						Plot.ruleX(plotMarksArray[1]),
+						Plot.line(this.healthAttributeData, { strokeWidth: 2.5, stroke: "black" }),
+					]
+				});
+				
 			}
 		}
 	},
@@ -963,10 +867,20 @@ const ChartAttributes = new Vue({
 					console.error(error);
 				});
 
+			// Sort Array
 			this.dataHolder.sort((a, b) => a[0] - b[0]);
 
-			// element[0] is the health attribute number/data-point. This also serves as an index into a parallel array of the dataHolder property.
-			this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0], element[1], element[2], element[4]]));
+			// Creates two objects based upon dataHolder. These objects are versions of dataHolder without any zero values (dataHolderNoZeros), and with nothing but zero values (dataHolderAllZeros).
+			this.dataHolderNoZeros = [];
+			this.dataHolderAllZeros = []
+			for (let i = 0; i < this.dataHolder.length; i++) {
+				if (this.dataHolder[i][0] !== 0) {
+					this.dataHolderNoZeros.push(this.dataHolder[i])
+				}
+				else {
+					this.dataHolderAllZeros.push(this.dataHolder[i])
+				}
+			}
 
 			// Updates the list of counties
 			this.updateCountyList();
