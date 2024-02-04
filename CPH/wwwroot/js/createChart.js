@@ -14,6 +14,8 @@ const ChartAttributes = new Vue({
 	// chartArea - References the HTML element for displaying the percentile chart
 	// year - Holds the selected file's year
 	// dataHolder - Holds the selected file's identifying data - i.e., 'Aleutians East Borough', 'AK', '2013', '13'
+	// dataHolderNoZeros - Holds the selected file's identifying data - i.e., 'Aleutians East Borough', 'AK', '2013', '13' with no zero values included
+	// dataHolderAllZeros - Holds the selected file's identifying data - i.e., 'Aleutians East Borough', 'AK', '2013', '13' with only zero values included
 	// healthAttribute - holds a string of the user selected health attribute
 	// healthAttributeData - Holds the data values and percentiles of the selected health attribute - i.e., 1.096147823363608, 0
 	// fullRawData - Holds the selected file's unprocessed data as individual rows within an array
@@ -92,8 +94,6 @@ const ChartAttributes = new Vue({
 			else {
 				this.healthAttributeData = this.dataHolder.map((element, index) => ([(index / this.dataHolder.length * 100), element[0], element[1], element[2], element[4]]));
 			}
-
-			console.log(this.healthAttributeData)
 
 			// resets and get the county div
 			this.removeAllChildNodes(document.getElementById("Counties"))
@@ -369,7 +369,10 @@ const ChartAttributes = new Vue({
 		*/
 		clearChartArea() {
 			this.displayLegend = false;
-			this.healthAttribute = null;
+			// If a health attribute has been selected, clear the value. A health attribute will never be selected upon selecting a year the first time.
+			if (this.healthAttribute !== null) {
+				this.healthAttribute = null;
+			};
 		},
 		/**
 		* Clears the Legend
@@ -381,12 +384,14 @@ const ChartAttributes = new Vue({
 		* This function clears and resets the county select display list
 		*/
 		resetCountiesStateList() {
-			// Sets the arrays to empty, thus removing the chart dots
-			this.selectedCounties = [];
+			if (this.selectedCounties.length !== 0) {
+				// Sets the arrays to empty, thus removing the chart dots
+				this.selectedCounties = [];
 
-			// Clears all checkboxes in the Counties ul list
-			for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
-				document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = false;
+				// Clears all checkboxes in the Counties ul list
+				for (let i = 0; i < document.getElementById("Counties").getElementsByTagName('li').length; i++) {
+					document.getElementById("Counties").getElementsByTagName('li')[i].firstChild.checked = false;
+				};
 			};
 		},
 		/**
@@ -468,7 +473,6 @@ const ChartAttributes = new Vue({
 		 * Populates the list elements
 		 */
 		addDataToUL(dataset, data, ulId, inputType = "checkbox") {
-
 			// Loops through and builds the html controls
 			for (let i = 0; i < data.length; i++) {
 
@@ -791,7 +795,6 @@ const ChartAttributes = new Vue({
 						count = 0;
 					}
 				};
-
 				// Returns the plot to the calling function when a county is clicked
 				return Plot.plot({
 					margin: 60,
@@ -810,14 +813,14 @@ const ChartAttributes = new Vue({
 						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
 					},
 					marks: [
-						Plot.ruleY(plotMarksArray[0].data),
-						Plot.ruleX(plotMarksArray[1].data),
+						//Plot.ruleY(plotMarksArray[0].data),
+						//Plot.ruleX(plotMarksArray[1].data),
 						Plot.line(plotMarksArray[2].data, { strokeWidth: 2.5, stroke: "black" }),
-						Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray })
+						Plot.dot(dotArray, { opacity: 0.8, stroke: "black", r: 10, strokeWidth: 2, fill: this.dotColorArray }),
 					]
 				});
 			} else {
-				// Returns the plot to the calling function when a health attribute is clicked
+				// Returns the plot to the calling function when a health attribute is clicked, or when all counties are unclicked
 				return Plot.plot({
 					margin: 60,
 					grid: true,
@@ -835,12 +838,11 @@ const ChartAttributes = new Vue({
 						label: `↑ ${this.capitalizer(this.healthAttribute) + " - " + this.year}`
 					},
 					marks: [
-						Plot.ruleY(plotMarksArray[0]),
-						Plot.ruleX(plotMarksArray[1]),
+						//Plot.ruleY(plotMarksArray[0]),
+						//Plot.ruleX(plotMarksArray[1]),
 						Plot.line(this.healthAttributeData, { strokeWidth: 2.5, stroke: "black" }),
 					]
 				});
-				
 			}
 		}
 	},
