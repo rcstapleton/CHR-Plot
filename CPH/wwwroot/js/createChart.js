@@ -113,6 +113,7 @@ const ChartAttributes = new Vue({
 			]);
 
 			// Loads the previously selected counties/states
+			//TODO FIX SPELLING
 			if (this.selectedCounties.length > 0) {
 				this.loadPreviosSelection()
 			}
