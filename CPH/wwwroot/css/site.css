@@ -9,6 +9,16 @@ a {
   color: #0366d6;
 }
 
+
+/* Home Page
+-------------------------------------------------- */
+#create_chart_link {
+    font-size: 32pt;
+    text-align: center;
+    display: block;
+}
+
+
 .btn-primary {
   color: #fff;
   background-color: #1b6ec2;
@@ -151,7 +161,7 @@ body {
 
 .divRegionSaveLoad {
     display: inline-block;
-    padding-left: 3%;
+    padding-left: 1.5%;
 }
 
 .labelRegionSaveLoad, regionSaveLoad {
@@ -167,6 +177,7 @@ body {
 .showZeroSwtich {
     display: inline-block;
     padding-left: 1.5%;
+    width: 13%
 }
 .labelZeroSwitch {
     display: flex;
@@ -228,9 +239,9 @@ input:focus + .slider {
 
 /* Controls the swtich's range of movement */
 input:checked + .slider:before {
-    -webkit-transform: translateX(310%);
-    -ms-transform: translateX(310%);
-    transform: translateX(310%);
+    -webkit-transform: translateX(380%);
+    -ms-transform: translateX(380%);
+    transform: translateX(380%);
 }
 
 /* Rounds the sliders */

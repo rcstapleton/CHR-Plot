@@ -3,39 +3,28 @@
 }
 
 <div> 
-    <H1 style="text-align:center">Welcome to CHR-Plot</H1>
-    <br />
-    <p>This website generates annotated percentile charts of health indicators for the United States and its territories. Data for these charts has been compiled by the <a href="https://www.countyhealthrankings.org/">County Health Rankings (CHR) project</a>, a service of the <a href="https://uwphi.pophealth.wisc.edu">University of Wisconsin's Population Health Institute</a>.  The CHR project maintains data on its website on various health indicators for each of the U.S.'s 3000+ counties and independent cities, dating to 2010.</p>
-    <p>This site's charts depict CHR indicators for user-selected counties and states on curves generated from CHR data for a user-specified indicatorand year.  Charts show counties and states as colorized dots, while listing percentiles in a sidebar. Users can save groups of counties and states to their PC's download folders, to be used in other plots..</p>
-    <hr />
     <img src="~/Content/Images/chart_example.jpg" alt="Example chart image" id="img-rounded" />
-    <hr />
-    <p>To use the site, select a year from the dropdown on the Create Chart page. Doing so causes the site to show two additional controls:</p>
+    <a id="create_chart_link" href="../Dashboard/CreateChart">Create Chart</a>
+    <br />
+    <p>
+        This application generates annotated percentile charts of health indicators for the United States and its territories, using data compiled annually by the <a href="https://uwphi.pophealth.wisc.edu">University of Wisconsin's Population Health Institute's </a>
+        <a href="https://www.countyhealthrankings.org/">County Health Rankings (CHR) Project</a>. As shown above, these charts pinpoint the locations of user-selected counties and states on charts for more than 700 such indicators.
+    </p>
+    <span>To get started,</span>
     <ul>
-        <li>The first is an alphabetically sorted list of CHR health indicators for the selected year.</li>
-        <li>The second is a supporting dropdown that filters what the list of health indicators shows.
-            <ul>
-                <li>all indicators, or</li>
-                <li>selected indicators, filtered by whether they represent raw values (default), ratios, numerators, or denominators</li>
-            </ul>
-        </li>
+        <li>Select <a href="../Dashboard/CreateChart">Create Chart</a></li>
+        <li>From the dropdown menu that appears, select a year.</li>
+        <li>From the dropdown menu that then appears, select an indicator.</li>
+        <li>In the display that then appears, select the counties to highlight on the chart.</li>
     </ul>
-    <p>Once a year and an indicator are selected, the site generates a webpage that shows the requested percentile chart, along with the site's primary controls:</p>
-    <ul>
-        <li>the year control</li>
-        <li>the health indicator dropdown for the given year, with its associated health indicators filter</li>
-        <li>the state/county list for the given year</li>
-        <li>additional control that allows for
-            <ul>
-                <li>saving the currently selected group of counties and states under a name of your choice, or</li>
-                <li>recalling a group of previously saved counties and states</li>
-            </ul>
-        </li>
-    </ul>
-    <p>The counties and states dropdown can be used to incrementally add regions to or remove regions from the current percentile chart.  Changing the year or the indicator, on the other hand, redraws the current chart, erasing all counties from the chart.</p>
+    <p>Additional controls on the 'Create Chart' page allow for the removal of zero and null values from the chart, for saving groups of counties and states to a local file, and for the retrieval of these groups from those files for generating related plots.</p>
+    <br />
+    <p>
+        For more information about the various health indicators, please reference the County Health Rankings (CHR) Project's <a href="https://www.countyhealthrankings.org/sites/default/files/media/document/DataDictionary_2024.pdf">
+            Data Dictionary (XLSX) files</a> 
+            found on their <a href="https://www.countyhealthrankings.org/health-data/methodology-and-sources/rankings-data-documentation"> Download page.</a>
+        </p>
 </div>
-
-
 @section scripts{ 
    
 }

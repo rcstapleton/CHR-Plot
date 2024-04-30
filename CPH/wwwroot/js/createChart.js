@@ -342,6 +342,17 @@ const ChartAttributes = new Vue({
 		*/
 		displayZeroListToggle() {
 			this.displayZeroList = !this.displayZeroList;
+
+			if (this.displayZeroList) {
+				document.getElementsByClassName("labelZeroSwitch")[0].textContent = "Null/Zeros Off"
+			}
+			else {
+				document.getElementsByClassName("labelZeroSwitch")[0].textContent = "Null/Zeros On"
+			}
+
+			console.log(document.getElementsByClassName("labelZeroSwitch")[0].textContent)
+			
+
 			// Updates the list of counties
 			this.updateCountyList();
 		},
@@ -749,11 +760,9 @@ const ChartAttributes = new Vue({
 		parseCountyAndStateName(countyState) {
 			var split = countyState.split(",");
 			// Checks if the passed countyState has an abbreviation (A passed countyState will not have an abbreviation if it is a state)
+			split[0] = split[0].trim();
 			if (split.length === 2) {
-				split[0] = split[0].trim();
 				split[1] = split[1].trim();
-			} else {
-				split[0] = split[0].trim();
 			}
 			return split;
 		},
@@ -774,27 +783,24 @@ const ChartAttributes = new Vue({
 				// Create a parallel color array for the dotArray
 				// TODO: Prepopulate the dotColorArray.
 				// replace loop body with this.dotColorArray.push(dotArray[i])
-				let count = 0;
 				for (let i = 0; i < dotArray.length; i++) {
-					if (count === 0) {
+					if (i % 7 === 0) {
 						this.dotColorArray.push("red");
-					} else if (count === 1) {
+					} else if (i % 7 === 1) {
 						this.dotColorArray.push("green");
-					} else if (count === 2) {
+					} else if (i % 7 === 2) {
 						this.dotColorArray.push("blue");
-					} else if (count === 3) {
+					} else if (i % 7 === 3) {
 						this.dotColorArray.push("DarkGray")
-					} else if (count === 4) {
+					} else if (i % 7 === 4) {
 						this.dotColorArray.push("SaddleBrown");
-					} else {
+					} else if (i % 7 === 5) {
+						this.dotColorArray.push("gold");
+                    }
+					else {
 						this.dotColorArray.push("black");
 					};
 
-					// Resets the count to zero upon reaching the set limit
-					count++
-					if (count > 4) {
-						count = 0;
-					}
 				};
 				// Returns the plot to the calling function when a county is clicked
 				return Plot.plot({

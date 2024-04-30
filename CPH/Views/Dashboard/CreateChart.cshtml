@@ -48,9 +48,9 @@
         </div>
         <!--Show Zero switch-->
             <span class="showZeroSwtich" v-show="displayLegend" v-cloak>
-                <label class="labelZeroSwitch" for="zeroSwitch" v-show="displayLegend">Zeros On/Off</label>
+                <label class="labelZeroSwitch" for="zeroSwitch" v-show="displayLegend">Null/Zeros On </label>
                 <label class="switch">
-                <input type="checkbox" id="checkbox" v-on:click="displayZeroListToggle" />
+                <input type="checkbox" id="checkbox" v-on:click="displayZeroListToggle" value="Submit" />
                     <span class="slider round"></span>
                 </label>
             </span>
@@ -93,7 +93,6 @@
             </div>
         </div>
     </div>
-    <!--<label for="checkbox">{{ regionSaveLoadSelect }}</label>-->
 </div>
 @section scripts{
     <script type="module" src="~/js/createChart.js"></script>
